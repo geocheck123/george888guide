@@ -1,0 +1,38 @@
+version: "3.9"
+
+services:
+  bot:
+    build: .
+    restart: unless-stopped
+    env_file: .env
+    ports:
+      - "${WEBHOOK_PORT:-8080}:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - app_net
+
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-subscriptions}
+      POSTGRES_USER: ${POSTGRES_USER:-bot}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-bot} -d ${POSTGRES_DB:-subscriptions}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - app_net
+
+volumes:
+  postgres_data:
+
+networks:
+  app_net:
+    driver: bridge
