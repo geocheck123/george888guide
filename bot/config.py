@@ -27,19 +27,15 @@ class Settings(BaseSettings):
     postgres_password: str = ""
 
     # Lava.top
-    lava_api_key: str           # your API key from Integrations → Public API
-    lava_webhook_secret: str    # key YOU define, paste into lava.top webhook settings
+    lava_api_key: str
+    lava_webhook_secret: str
     lava_api_url: str = "https://api.lava.top"
+    lava_product_id: str        # single product ID from lava.top dashboard
 
-    # Lava.top product IDs (create products in lava.top dashboard first)
-    lava_product_1m: str = ""
-    lava_product_3m: str = ""
-    lava_product_12m: str = ""
-
-    # Plans labels
-    plan_1_month_price: int = 299
-    plan_3_month_price: int = 799
-    plan_12_month_price: int = 2499
+    # Plan settings
+    plan_months: int = 1
+    plan_label: str = "1 месяц"
+    plan_price: int = 299
 
     # Misc
     log_level: str = "INFO"
@@ -47,14 +43,6 @@ class Settings(BaseSettings):
     @property
     def telegram_webhook_url(self) -> str:
         return f"{self.webhook_host}{self.webhook_path}"
-
-    @property
-    def plans(self) -> dict:
-        return {
-            "1m": {"months": 1, "price": self.plan_1_month_price, "label": "1 месяц", "product_id": self.lava_product_1m},
-            "3m": {"months": 3, "price": self.plan_3_month_price, "label": "3 месяца", "product_id": self.lava_product_3m},
-            "12m": {"months": 12, "price": self.plan_12_month_price, "label": "12 месяцев", "product_id": self.lava_product_12m},
-        }
 
 
 @lru_cache
