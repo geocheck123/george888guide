@@ -27,9 +27,9 @@ class Settings(BaseSettings):
     postgres_password: str = ""
 
     # Lava.top
-    lava_secret_key: str
-    lava_shop_id: str
-    lava_api_url: str = "https://api.lava.top/business/invoice/create"
+    lava_api_key: str           # your API key from Integrations → Public API
+    lava_webhook_secret: str    # key YOU define, paste into lava.top webhook settings
+    lava_api_url: str = "https://api.lava.top"
 
     # Plans (price in RUB)
     plan_1_month_price: int = 299

@@ -8,10 +8,13 @@ from bot.config import settings
 from bot.database.engine import AsyncSessionLocal
 from bot.database.queries import get_payment_by_invoice, mark_payment_paid
 from bot.keyboards.inline import join_channel_button
-from bot.services.lava_top import verify_webhook_signature
+from bot.services.lava_top import verify_webhook_secret
 from bot.services.subscription import activate
 
 logger = logging.getLogger(__name__)
+
+# Event types that mean a successful payment
+SUCCESS_EVENTS = {"payment.success", "subscription.recurring.payment.success"}
 
 
 def create_app(bot: Bot, dp: Dispatcher) -> FastAPI:
@@ -27,21 +30,29 @@ def create_app(bot: Bot, dp: Dispatcher) -> FastAPI:
     @app.post(settings.lava_webhook_path)
     async def lava_webhook(
         request: Request,
-        x_signature: str = Header(default="", alias="X-Signature"),
+        x_api_key: str = Header(default="", alias="X-Api-Key"),
     ) -> dict:
-        body = await request.body()
-
-        if not verify_webhook_signature(body, x_signature):
-            logger.warning("Invalid Lava webhook signature")
-            raise HTTPException(status_code=403, detail="Bad signature")
+        # Verify the key Lava.top sends matches our LAVA_WEBHOOK_SECRET
+        if not verify_webhook_secret(x_api_key):
+            logger.warning("Invalid Lava webhook secret")
+            raise HTTPException(status_code=403, detail="Bad secret")
 
         data = await request.json()
         logger.info("Lava webhook received: %s", data)
 
-        status = data.get("status")
-        invoice_id = data.get("id") or data.get("orderId")
+        event_type = data.get("type", "")
+        if event_type not in SUCCESS_EVENTS:
+            # Not a success event (e.g. payment.failed, subscription.cancelled)
+            return {"ok": True}
 
-        if status != "success" or not invoice_id:
+        # Lava.top invoice/order ID — try common field names
+        invoice_id = (
+            data.get("orderId")
+            or data.get("id")
+            or data.get("invoiceId")
+        )
+        if not invoice_id:
+            logger.warning("No invoice ID in webhook payload: %s", data)
             return {"ok": True}
 
         async with AsyncSessionLocal() as session:
