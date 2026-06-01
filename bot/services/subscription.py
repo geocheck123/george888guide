@@ -10,15 +10,8 @@ from bot.database import queries
 logger = logging.getLogger(__name__)
 
 
-async def activate(
-    bot: Bot,
-    session: AsyncSession,
-    user_id: int,
-    plan_key: str,
-) -> str:
-    """Activate a subscription and return a personal invite link."""
-    plan = settings.plans[plan_key]
-    expires_at = datetime.now(timezone.utc) + timedelta(days=30 * plan["months"])
+async def activate(bot: Bot, session: AsyncSession, user_id: int, plan_key: str) -> str:
+    expires_at = datetime.now(timezone.utc) + timedelta(days=30 * settings.plan_months)
 
     invite = await bot.create_chat_invite_link(
         chat_id=settings.channel_id,
@@ -38,7 +31,6 @@ async def activate(
 
 
 async def revoke_expired(bot: Bot, session: AsyncSession) -> int:
-    """Kick expired subscribers from the channel. Returns count removed."""
     expired = await queries.get_expired_subscriptions(session)
     removed = 0
     for sub in expired:
@@ -48,7 +40,6 @@ async def revoke_expired(bot: Bot, session: AsyncSession) -> int:
             await queries.mark_subscription_expired(session, sub.id)
             removed += 1
             logger.info("Removed expired user %d from channel", sub.user_id)
-
             try:
                 await bot.send_message(
                     sub.user_id,
@@ -56,7 +47,7 @@ async def revoke_expired(bot: Bot, session: AsyncSession) -> int:
                     "Используйте /start чтобы продлить подписку.",
                 )
             except Exception:
-                pass  # user may have blocked the bot
+                pass
         except Exception as exc:
             logger.warning("Could not remove user %d: %s", sub.user_id, exc)
     return removed

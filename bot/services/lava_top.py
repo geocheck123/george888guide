@@ -15,24 +15,21 @@ class InvoiceResult:
     pay_url: str
 
 
-async def create_invoice(user_id: int, plan_key: str) -> InvoiceResult:
-    plan = settings.plans[plan_key]
-    order_id = f"{user_id}_{plan_key}_{uuid.uuid4().hex[:8]}"
+async def create_invoice(user_id: int) -> InvoiceResult:
+    order_id = f"{user_id}_{uuid.uuid4().hex[:8]}"
 
-    # Lava.top authenticates via X-Api-Key header
     headers = {
         "X-Api-Key": settings.lava_api_key,
         "Content-Type": "application/json",
     }
 
     payload = {
-        "sum": plan["price"],
+        "email": f"{user_id}@telegram.user",
+        "offerId": settings.lava_product_id,
         "orderId": order_id,
-        "comment": f"Подписка {plan['label']} — user {user_id}",
         "hookUrl": f"{settings.webhook_host}{settings.lava_webhook_path}",
         "successUrl": f"https://t.me/{(await _bot_username())}",
         "failUrl": f"https://t.me/{(await _bot_username())}",
-        "expire": 30,
     }
 
     async with httpx.AsyncClient(timeout=15) as client:
@@ -56,5 +53,4 @@ async def _bot_username() -> str:
 
 
 def verify_webhook_secret(x_api_key: str) -> bool:
-    """Lava.top sends our own LAVA_WEBHOOK_SECRET back in X-Api-Key header."""
     return x_api_key == settings.lava_webhook_secret
