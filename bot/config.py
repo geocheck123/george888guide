@@ -31,7 +31,12 @@ class Settings(BaseSettings):
     lava_webhook_secret: str    # key YOU define, paste into lava.top webhook settings
     lava_api_url: str = "https://api.lava.top"
 
-    # Plans (price in RUB)
+    # Lava.top product IDs (create products in lava.top dashboard first)
+    lava_product_1m: str = ""
+    lava_product_3m: str = ""
+    lava_product_12m: str = ""
+
+    # Plans labels
     plan_1_month_price: int = 299
     plan_3_month_price: int = 799
     plan_12_month_price: int = 2499
@@ -46,9 +51,9 @@ class Settings(BaseSettings):
     @property
     def plans(self) -> dict:
         return {
-            "1m": {"months": 1, "price": self.plan_1_month_price, "label": "1 месяц"},
-            "3m": {"months": 3, "price": self.plan_3_month_price, "label": "3 месяца"},
-            "12m": {"months": 12, "price": self.plan_12_month_price, "label": "12 месяцев"},
+            "1m": {"months": 1, "price": self.plan_1_month_price, "label": "1 месяц", "product_id": self.lava_product_1m},
+            "3m": {"months": 3, "price": self.plan_3_month_price, "label": "3 месяца", "product_id": self.lava_product_3m},
+            "12m": {"months": 12, "price": self.plan_12_month_price, "label": "12 месяцев", "product_id": self.lava_product_12m},
         }
 
 

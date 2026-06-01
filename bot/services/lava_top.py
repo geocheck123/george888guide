@@ -19,20 +19,18 @@ async def create_invoice(user_id: int, plan_key: str) -> InvoiceResult:
     plan = settings.plans[plan_key]
     order_id = f"{user_id}_{plan_key}_{uuid.uuid4().hex[:8]}"
 
-    # Lava.top authenticates via X-Api-Key header
     headers = {
         "X-Api-Key": settings.lava_api_key,
         "Content-Type": "application/json",
     }
 
     payload = {
-        "sum": plan["price"],
+        "email": f"{user_id}@telegram.user",  # Lava.top requires buyer email
+        "offerId": plan["product_id"],         # product ID from lava.top dashboard
         "orderId": order_id,
-        "comment": f"Подписка {plan['label']} — user {user_id}",
         "hookUrl": f"{settings.webhook_host}{settings.lava_webhook_path}",
         "successUrl": f"https://t.me/{(await _bot_username())}",
         "failUrl": f"https://t.me/{(await _bot_username())}",
-        "expire": 30,
     }
 
     async with httpx.AsyncClient(timeout=15) as client:
