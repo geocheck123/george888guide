@@ -42,10 +42,20 @@ async def main() -> None:
     dp = build_dispatcher()
 
     logger.info("Setting webhook: %s", settings.telegram_webhook_url)
-    await bot.set_webhook(
+    ok = await bot.set_webhook(
         url=settings.telegram_webhook_url,
         drop_pending_updates=True,
         allowed_updates=dp.resolve_used_update_types(),
+    )
+    logger.info("set_webhook returned: %s", ok)
+
+    # Verify what Telegram actually has registered after we set it
+    info = await bot.get_webhook_info()
+    logger.info(
+        "Webhook verify -> url=%r pending=%s last_error=%r",
+        info.url,
+        info.pending_update_count,
+        info.last_error_message,
     )
 
     scheduler = build_scheduler(bot)
@@ -69,7 +79,6 @@ async def main() -> None:
         await server.serve()
     finally:
         scheduler.shutdown()
-        await bot.delete_webhook()
         await bot.session.close()
         logger.info("Bot stopped")
 
