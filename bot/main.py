@@ -59,6 +59,8 @@ async def main() -> None:
         host="0.0.0.0",
         port=settings.webhook_port,
         log_level=settings.log_level.lower(),
+        proxy_headers=True,
+        forwarded_allow_ips="*",
     )
     server = uvicorn.Server(config)
     logger.info("Starting uvicorn on port %d…", settings.webhook_port)
