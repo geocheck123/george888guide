@@ -69,7 +69,6 @@ async def main() -> None:
         await server.serve()
     finally:
         scheduler.shutdown()
-        await bot.delete_webhook()
         await bot.session.close()
         logger.info("Bot stopped")
 
