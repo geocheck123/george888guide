@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from bot.config import settings
 from bot.database import queries
 from bot.database.queries import create_payment
-from bot.keyboards.inline import join_channel_button, pay_button, check_button
+from bot.keyboards.inline import join_channel_button, pay_button, subscribe_button
 from bot.services import lava_top
 
 logger = logging.getLogger(__name__)
@@ -32,12 +32,9 @@ async def cmd_start(message: Message, session: AsyncSession) -> None:
         return
 
     await message.answer(
-        f"👋 Добро пожаловать!\n\n"
-        f"📦 Подписка: <b>{settings.plan_label}</b>\n"
-        f"💰 Стоимость: <b>{settings.plan_price} ₽</b>\n\n"
-        f"Нажмите кнопку ниже, чтобы оплатить доступ к приватному каналу:",
-        reply_markup=check_button(),
-        parse_mode="HTML",
+        "👋 Добро пожаловать!\n\n"
+        "Для получения доступа к приватному каналу оформите подписку:",
+        reply_markup=subscribe_button(),
     )
 
 
@@ -57,14 +54,13 @@ async def handle_buy(callback: CallbackQuery, session: AsyncSession) -> None:
         user_id=callback.from_user.id,
         invoice_id=result.invoice_id,
         plan="main",
-        amount=settings.plan_price,
+        amount=0,  # price is defined in lava.top product
     )
 
     await callback.message.edit_text(
-        f"💳 Счёт на оплату создан!\n\n"
-        f"📦 Подписка: <b>{settings.plan_label}</b>\n"
-        f"💰 Сумма: <b>{settings.plan_price} ₽</b>\n\n"
-        f"Нажмите кнопку ниже для оплаты. После оплаты нажмите «Я оплатил».",
+        "💳 Счёт создан!\n\n"
+        "Нажмите кнопку ниже для оплаты.\n"
+        "После оплаты нажмите «Я оплатил».",
         reply_markup=pay_button(result.pay_url),
         parse_mode="HTML",
     )

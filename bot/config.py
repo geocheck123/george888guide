@@ -30,12 +30,10 @@ class Settings(BaseSettings):
     lava_api_key: str
     lava_webhook_secret: str
     lava_api_url: str = "https://api.lava.top"
-    lava_product_id: str        # single product ID from lava.top dashboard
+    lava_product_id: str        # product ID from lava.top dashboard
 
-    # Plan settings
+    # How many months this product grants
     plan_months: int = 1
-    plan_label: str = "1 месяц"
-    plan_price: int = 299
 
     # Misc
     log_level: str = "INFO"
