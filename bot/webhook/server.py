@@ -3,6 +3,7 @@ import logging
 from aiogram import Bot, Dispatcher
 from aiogram.types import Update
 from fastapi import FastAPI, Header, HTTPException, Request
+from starlette.middleware.trustedhost import TrustedHostMiddleware
 
 from bot.config import settings
 from bot.database.engine import AsyncSessionLocal
@@ -19,6 +20,7 @@ SUCCESS_EVENTS = {"payment.success", "subscription.recurring.payment.success"}
 
 def create_app(bot: Bot, dp: Dispatcher) -> FastAPI:
     app = FastAPI(title="Subscription Bot", docs_url=None, redoc_url=None)
+    app.add_middleware(TrustedHostMiddleware, allowed_hosts=["*"])
 
     @app.post(settings.webhook_path)
     async def telegram_webhook(request: Request) -> dict:
